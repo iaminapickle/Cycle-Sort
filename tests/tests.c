@@ -8,9 +8,9 @@
 
 int main(void) {
   AlgorithmArr *algos = createEmptyAlgorithmArr();
-  //addAlgorithm(algos, &wikiCycleSort, false, "Wiki Cycle Sort");
+  addAlgorithm(algos, &wikiCycleSort, false, "Wiki Cycle Sort");
   addAlgorithm(algos, &generalCycleSort, false, "General Cycle Sort");
-  //addAlgorithm(algos, &specialCycleSort, false, "Special Cycle Sort");
+  addAlgorithm(algos, &specialCycleSort, false, "Special Cycle Sort");
 
   runTests(algos);
   freeAlgorithmArr(algos);
