@@ -6,7 +6,7 @@
 
 #define DEFAULT_TEST_SIZE 10
 #define DEFAULT_MAX_VAL 10
-#define DEFAULT_N_TESTS 5
+#define DEFAULT_N_TESTS 20
 
 typedef struct algorithm_struct {
   void (*sort)(TupleArr*);

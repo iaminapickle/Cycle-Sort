@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
@@ -12,16 +13,15 @@
 #define RESET "\033[0m"
 
 #define SIMPLE_TESTS false
-#define NO_ALGORITHMS 3
 
 unsigned int* generateSeeds(void);
 void printBuffer(int nameLength, int longestNameLength);
 void testAllAlgorithmCorrectness(AlgorithmArr *algos);
 void testAllAlgorithmTime(AlgorithmArr *algos);
 void runTimeTests(AlgorithmArr *algos, Results **results, int *noResults, unsigned int *seeds, int testSize, int maxVal);
-void printTimeResults(AlgorithmArr *algos, Results **res, int noResults);
-void addResults(Results **results, int i, double* res, int noAlgos, int testSize, int maxVal);
-void freeResults(Results **results, int noResults);
+void printTimeResults(AlgorithmArr *algos, Results *res, int noResults);
+void addResults(Results *results, int i, double* res, int noAlgos, int testSize, int maxVal);
+void freeResults(Results *results, int noResults);
 
 void testAllAlgorithmCorrectness(AlgorithmArr *algos) {
   unsigned int *seeds = generateSeeds();
@@ -48,18 +48,17 @@ void testAllAlgorithmCorrectness(AlgorithmArr *algos) {
 void testAllAlgorithmTime(AlgorithmArr *algos) {
   unsigned int *seeds = generateSeeds();
   int noResults = 0;
+  Results *results = NULL;
 
   if (SIMPLE_TESTS) {
-    Results **results = malloc((NO_ALGORITHMS + 1) * sizeof(*results));
-    runTimeTests(algos, results, &noResults, seeds, DEFAULT_TEST_SIZE, DEFAULT_MAX_VAL);
+    runTimeTests(algos, &results, &noResults, seeds, DEFAULT_TEST_SIZE, DEFAULT_MAX_VAL);
     printTimeResults(algos, results, noResults);
     freeResults(results, noResults);
   } else {
-    for (int testSize = 10; testSize < 100000; testSize *= 10) {
-      Results **results = malloc((NO_ALGORITHMS + 1) * sizeof(*results));
-      for (int maxVal = 10; maxVal < 10000000; maxVal *= 10) {
+    for (int testSize = 10; testSize < 1000000; testSize *= 10) {
+      for (int maxVal = 10; maxVal <= 1000000000; maxVal *= 10) {
         printf("Running tests for size = %d and maximum value %d\n", testSize, maxVal);
-        runTimeTests(algos, results, &noResults, seeds, testSize, maxVal);
+        runTimeTests(algos, &results, &noResults, seeds, testSize, maxVal);
       }
       printTimeResults(algos, results, noResults);
       freeResults(results, noResults);
@@ -68,6 +67,7 @@ void testAllAlgorithmTime(AlgorithmArr *algos) {
   }
   free(seeds);
 }
+
 unsigned int* generateSeeds(void) {
   unsigned int *seeds = malloc(DEFAULT_N_TESTS * sizeof(*seeds));
   seeds[0] = time(NULL);
@@ -90,31 +90,30 @@ void runTests(AlgorithmArr *algos) {
   testAllAlgorithmTime(algos);
 }
 
-void addResults(Results **results, int i, double* res, int noAlgos, int testSize, int maxVal) {
-  results[i] = malloc(sizeof(*results[i]));
-  results[i]->arr = malloc(noAlgos * sizeof(*results[i]->arr));
-  results[i]->min = res[0];
-  results[i]->max = res[0];
-  results[i]->longestResultLength = 0;
+void addResults(Results *results, int i, double* res, int noAlgos, int testSize, int maxVal) {
+  results[i].arr = malloc(noAlgos * sizeof(results[i].arr));
+  results[i].min = res[0];
+  results[i].max = res[0];
+  results[i].longestResultLength = 0;
 
   for (int j = 0; j < noAlgos; j++) {
     int len = snprintf(NULL, 0, "%0.1f", res[j]);
-    if (len > results[i]->longestResultLength) {
-      results[i]->longestResultLength = len;
+    if (len > results[i].longestResultLength) {
+      results[i].longestResultLength = len;
     }
 
-    results[i]->arr[j] = res[j];
+    results[i].arr[j] = res[j];
 
-    if (res[j] > results[i]->max) {
-      results[i]->max = res[j];
+    if (res[j] > results[i].max) {
+      results[i].max = res[j];
     }
 
-    if (res[j] < results[i]->min) {
-      results[i]->min = res[j];
+    if (res[j] < results[i].min) {
+      results[i].min = res[j];
     }
   }
-  results[i]->testSize = testSize;
-  results[i]->maxVal = maxVal;
+  results[i].testSize = testSize;
+  results[i].maxVal = maxVal;
 
   return;
 }
@@ -143,7 +142,7 @@ void addAlgorithm(AlgorithmArr *algos, void (*sort)(TupleArr*), bool isStable, c
   }
 }
 
-void printTimeResults(AlgorithmArr *algos, Results **results, int noResults) {
+void printTimeResults(AlgorithmArr *algos, Results *results, int noResults) {
   printf("Testing for time taken:\n");
   for (int i = 0; i < algos->noAlgos; i++) {
     Algorithm cur = algos->arr[i];
@@ -151,14 +150,14 @@ void printTimeResults(AlgorithmArr *algos, Results **results, int noResults) {
     printBuffer(strlen(cur.name), algos->longestNameLength);
 
     for (int j = 0; j < noResults; j++) {
-      if (results[j]->arr[i] == results[j]->min) {
+      if (results[j].arr[i] == results[j].min) {
         printf(GREEN);
-      } else if (results[j]->arr[i] == results[j]->max) {
+      } else if (results[j].arr[i] == results[j].max) {
         printf(RED);
       }
-      int len = snprintf(NULL, 0, "%0.1f", results[j]->arr[i]);
-      printf("  %0.1lf  " RESET, results[j]->arr[i]);
-      for (int k = 0; k < results[j]->longestResultLength - len; k++) {
+      int len = snprintf(NULL, 0, "%0.1f", results[j].arr[i]);
+      printf("  %0.1lf  " RESET, results[j].arr[i]);
+      for (int k = 0; k < results[j].longestResultLength - len; k++) {
         printf(" ");
       }
 
@@ -176,14 +175,14 @@ void runTimeTests(AlgorithmArr *algos, Results **results, int *noResults, unsign
   }
 
   (*noResults)++;
-  addResults(results, *noResults - 1, res, algos->noAlgos, testSize, maxVal);
+  *results = realloc(*results, *noResults * sizeof(**results));
+  addResults(*results, *noResults - 1, res, algos->noAlgos, testSize, maxVal);
   return;
 }
 
-void freeResults(Results **results, int noResults) {
+void freeResults(Results *results, int noResults) {
   for (int i = 0; i < noResults; i++) {
-    free(results[i]->arr);
-    free(results[i]);
+    free(results[i].arr);
   }
   free(results);
 }

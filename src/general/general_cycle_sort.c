@@ -11,10 +11,6 @@ static void genCumulCountArray(int *count, int max);
 // Generates the count array
 static int *genCountArray(Tuple *arr, int size, int max) {
   int *count = calloc(max + 1, sizeof(*count));
-  if (count == NULL) {
-    printf("Count array too large. Aborting...\n");
-    exit(0);
-  }
   for (int i = 0; i < size; i++) {
     count[arr[i].n]++;
   }

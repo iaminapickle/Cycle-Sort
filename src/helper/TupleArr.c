@@ -57,13 +57,13 @@ void randomiseTuples_Max(TupleArr *tupleArr, int max, int seed) {
 
   shuffleTupleArr(tupleArr);
 
-  int count[max + 1];
-  memset(count, 0, sizeof(count));
+  int *count = calloc(max + 1, sizeof(*count));
   for (int i = 0; i < tupleArr->size; i++) {
     int num = tupleArr->arr[i].n;
     tupleArr->arr[i].c = count[num] + 97;
     count[num]++;
   }
+  free(count);
 }
 
 // n_unique <= size
